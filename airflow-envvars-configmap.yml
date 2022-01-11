@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: airflow-envvars-configmap
+data:
+  EXECUTOR: Kubernetes
+  POSTGRES_HOST: airflow-postgres
+  POSTGRES_USER: airflow
+  POSTGRES_PASSWORD: airflow
+  POSTGRES_DB: airflow
+  POSTGRES_PORT: "5432"
+  LOAD_EX: "y"
+  AIRFLOW__KUBERNETES__KUBE_CLIENT_REQUEST_ARGS: '{"_request_timeout": [60,60]}'
+  AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY: puckel/docker-airflow
+  AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG: "1.10.9"
+  AIRFLOW__KUBERNETES__DAGS_VOLUME_HOST: /d/Projects/04_Short/AIRFLOW_SCRIPTS
+  AIRFLOW__KUBERNETES__LOGS_VOLUME_CLAIM: airflow-logs-pvc
+  AIRFLOW__KUBERNETES__ENV_FROM_CONFIGMAP_REF: airflow-envvars-configmap

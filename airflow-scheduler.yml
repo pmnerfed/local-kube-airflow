@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow-scheduler
+  labels:
+    app: airflow-k8s
+spec:
+  selector:
+    matchLabels:
+      app: airflow-scheduler
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: airflow-scheduler
+    spec:
+      containers:
+      - name: airflow-scheduler
+        image: puckel/docker-airflow:1.10.9
+        args: ["scheduler"]
+        envFrom:
+          - configMapRef:
+              name: airflow-envvars-configmap
+        resources:
+          limits:
+            memory: "512Mi"
+        volumeMounts:
+          - name: airflow-req-configmap
+            subPath: "requirements.txt"
+            mountPath: "/requirements.txt"
+          - name: dags-host-volume
+            mountPath: /usr/local/airflow/dags
+          - name: logs-persistent-storage
+            mountPath: /usr/local/airflow/logs
+      volumes:
+        - name: airflow-req-configmap
+          configMap:
+            name: airflow-req-configmap
+        - name: dags-host-volume
+          hostPath:
+            path: /d/Projects/04_Short/AIRFLOW_SCRIPTS
+            type: Directory
+        - name: logs-persistent-storage
+          persistentVolumeClaim:
+              claimName: airflow-logs-pvc
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: pods-permissions
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+
+--- 
+
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: pods-permissions
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: pods-permissions
+  apiGroup: rbac.authorization.k8s.io
